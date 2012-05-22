@@ -1,0 +1,88 @@
+ABOUT THESE PROGRAMS
+====================
+
+This collection of matlab programs implement and demonstrates some fo the
+algorithms described in the book Rasmussen and Williams: "Gaussian Processes
+for Machine Learning", the MIT Press 2006.
+
+
+There are 3 subdirectories: gpml, gpml-demo and doc.
+
+gpml: contains code which implements the algorithms. Please see the Copyright
+      notice contained in the file named "Copyright".
+
+gpml-demo: contains matlab scripts with names "demo_*.m". These provide small
+      demonstrations of the various programs provided. 
+
+doc: contains four html files providing documentation. The best place to start
+      is index.html, the other pages are linked from there. This information
+      is also available from http://www.GaussianProcess.org/gpml/code
+
+When running the demos, it is assumed that your current directory is the
+gpml-demo directory. Otherwise, you should manually add both the gpml-demo and
+gpml directories to the matab path.
+
+
+VERSION
+=======
+
+This version of the programs is dated: 2006-04-12.
+
+
+CHANGES FROM PREVIOUS VERSIONS
+==============================
+
+Changes from the 2006-03-29:
+
+added files: "covProd.m" and "covPeriodic.m"
+
+changes: "covSEiso.m" was chnaged slightly to avoid the use of persistent
+         variables
+
+
+DATASETS
+========
+
+The datasets needed for some of the demos can be downloaded from 
+http://www.GaussianProcess.org/gpml/data 
+
+
+
+ABOUT MEX FILES
+===============
+
+Some of the programs make use of the mex facility in matlab for more efficient
+implementation. However, if you don't know about how to compile mex files, you
+do not need to worry about this - the code should run anyway. If you do
+compile the mex files, this should be automatically detected, and the program
+will run more efficiently. Particularly the demonstrations of classification
+on the usps digits require a lot of computation.
+
+
+
+COMPILING MEX FILES
+===================
+
+As mentioned above, it is not necessary to compile the mex files, but it can
+speed up execution considerably. We cannot give a detailed account, but here
+are some hints:
+
+Generally, you just type "mex file.c" at the matlab prompt or in your shell to
+compile, where "file.c" is the program you want to compile. There is a Makefile
+which works for unix/linux on x86 machines. Just type "make".
+
+In some cases (solve_chol.c), routines from the lapack numerical library are
+used. This should pose no problem on linux. On windows, you have to 1) remove
+the trailing underscore from the name of the lapack function ("dpotrs", two
+occurences) and 2) pass the location of the lapack library to mex, ie
+something like
+
+  mex file.c <matlab>/extern/lib/win32/lcc/libmwlapack.lib
+
+where <matlab> is the root of your matlab installation. If your installation
+doesn't include the libmwlapack.lib you may be able to get it from
+
+http://www.cise.ufl.edu/research/sparse/umfpack/v4.4/UMFPACKv4.4/UMFPACK/
+  MATLAB/lcc_lib/
+
+

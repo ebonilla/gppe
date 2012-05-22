@@ -1,0 +1,54 @@
+function dfdsigma = get_dlogp_dsigma(f, sigma, all_pairs, M, N)
+% dfdsigma = get_dlogp_dsigma(f, sigma, all_pairs, M, N)
+% 
+% Derivative of the gradient of the conditional likelihood wrt sigma
+% This is used to compute df_dsigma in the implicit derivative of
+% the marginal likelihood wrt sigma. (hyper-parameter learning) 
+%
+% INPUT:
+%   - f: The current value of f  (mode) 
+%   - sigma:  The noise parameter (scale factor of the preferences)
+%   - all_pairs: ell array of M elements. Each element is a O_m x 2 matrix 
+%       where O_m is the number of preferences observed for the corresponding
+%       user. Each row all_pairs{m} contains a preference relation 
+%       of the form all_pairs{m}(1) > all_pairs{m}(2)   
+%   - M: The number of users
+%   - N: The number of items
+% 
+% OUTPUT:
+%   - dfdsigma: vector of derivatives d_dsigma(d_df (log p (D | f) ) )
+
+% Edwin V. Bonilla (edwin.bonilla@nicta.com.au)
+% Last update: 22/05/2012
+
+M = length(all_pairs);
+Dfdsigma = zeros(N,M);
+for j = 1 :  M
+    if ( isempty(all_pairs{j}) )
+        continue;
+    end
+    
+    pairs = all_pairs{j};
+    idx_1 = pairs(:,1);
+    idx_2 = pairs(:,2);
+    
+    idx_global_1 = ind2global(idx_1, j, N);
+    idx_global_2 = ind2global(idx_2, j, N);
+    z = ( f(idx_global_1) - f(idx_global_2) )/sigma;
+ 
+    
+    cdf_val = normcdf(z);
+    pdf_val = normpdf(z);
+    ratio = pdf_val./cdf_val;
+    
+    val = (1/sigma) * ratio .* ( z.*(z+ratio) - 1);
+   
+    
+    coef = get_cum2(idx_1, val, N);
+    coef = coef - get_cum2(idx_2, val, N);
+ 
+    Dfdsigma(:,j) = coef;
+
+end
+dfdsigma = Dfdsigma(:);
+return;

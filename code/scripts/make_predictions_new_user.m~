@@ -1,0 +1,50 @@
+function fstar =  make_predictions_new_user(covfunc_t, covfunc_x, theta, train_t, x, ...
+    train_pairs, idx_global, idx_global_1, idx_global_2, ind_t, ind_x, test_t, idx_pairs, ftrue, ytrue)
+%  fstar =  make_predictions_new_user(covfunc_t, covfunc_x, theta, train_t, x, ...
+%     train_pairs, idx_global, idx_global_1, idx_global_2, ind_t, ind_x, test_t, idx_pairs, ftrue, ytrue)
+% Makes predictions on a new user
+% INPUT:
+covfunc_t, covfunc_x, theta, train_t, x, ...
+    train_pairs, idx_global, idx_global_1, idx_global_2, ind_t, ind_x, test_t, idx_pairs, ftrue, ytrue
+
+% OUTPUT:
+% - fstar is the predicted utility at all items
+
+% Edwin V. Bonilla (edwin.bonilla@nicta.com.au)
+% Last udapte: 21/05/2011
+
+N      = size(x,1);
+Mtrain = size(train_t,1);
+
+% get the f values first
+[f Kx, Kinv, W, L]  = approx_gppe_laplace_fast(covfunc_t, covfunc_x, ...
+    theta, train_t, x, train_pairs, idx_global, idx_global_1, idx_global_2, ind_t, ind_x, Mtrain, N);
+
+Npairs = size(idx_pairs,1);
+Fstar  = NaN(N,Npairs);
+P      = zeros(Npairs,1);
+for i = 1 : Npairs
+    pair = idx_pairs(i,:);
+    [p mustar] = predict_gppe_laplace(covfunc_t, covfunc_x, theta, f, Kx, ...
+        Kinv, W, L, train_t, x, idx_global, ind_t, ind_x, test_t, pair);
+    P(i,1) = p;    
+    Fstar([pair(1), pair(2)],i) = mustar;
+end
+fstar = mynanmean(Fstar, 2);
+
+% P is the preditive probabilities of the pair being a > relationship
+ypred = P > 0.5;
+fprintf('error=%.2f\n', sum(ytrue ~= ypred,1)/size(ytrue,1));
+
+
+% ystar = ( fstar(idx_pairs(:,1)) - fstar(idx_pairs(:,2)) ) > EPSILON; 
+
+
+% Plotting the underlying utility functions
+plot(ftrue, 'b'); hold on; plot(fstar, 'r');
+legend({'True Utility', 'Predicted Utility'});
+
+% [val, idx_true] = sort(ftrue, 'descend');
+% [val, idx_pred] = sort(fstar, 'descend');
+
+return;

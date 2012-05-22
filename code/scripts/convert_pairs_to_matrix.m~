@@ -1,0 +1,16 @@
+function pairs = convert_pairs_to_matrix(cell_pairs)
+% pairs = convert_pairs_to_matrix(cell_pairs)
+% 
+% Converts cell of preference pairs to a matrix
+% 
+% INPUT:
+%   - cell_pairs: 
+%   
+% Edwin V. Bonilla (edwin.bonilla@nicta.com.au)
+% Last udapte: 21/05/2011
+
+pairs = [];
+for i = 1 : length(cell_pairs)
+    pairs = [pairs; [repmat(i, size(cell_pairs{i},1), 1), cell_pairs{i}]];
+end
+

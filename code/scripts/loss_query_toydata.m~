@@ -1,0 +1,36 @@
+function [loss stop] = loss_query_toydata(test_user_idx, best_item_idx)
+% [loss stop] = loss_query_toydata(test_user_idx, best_item_idx)
+% Computes the loss of recommending item best_item_idx on user test_user_idx 
+% on the toy dataset 
+% 
+% INPUT:
+%   - test_user_idx: Index of test user
+%   - best_item_idx: Index of recommended item  
+%   
+
+% Edwin V. Bonilla (edwin.bonilla@nicta.com.au)
+% Last udapte: 21/05/2011
+
+F = [];
+load('toydata.mat', 'F');
+
+ftest = F(:, test_user_idx);
+best_val = max(ftest);
+pred_val = ftest(best_item_idx);
+
+loss = best_val - pred_val;
+
+if (pred_val == best_val)
+    stop = true;
+else
+    stop = false;
+end
+
+return;
+
+
+
+
+
+
+

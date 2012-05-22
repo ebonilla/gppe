@@ -1,0 +1,17 @@
+function deriv_loglike = deriv_log_likelihood_gppe_fast_gradchek(f, sigma, all_pairs, ...
+    idx_global_1, idx_global_2, M, N)
+% deriv_loglike = deriv_log_likelihood_gppe_fast_gradchek(f, sigma, all_pairs, ...
+%    idx_global_1, idx_global_2, M, N)
+%
+% To be
+% Edwin V. Bonilla (edwin.bonilla@nicta.com.au)
+% Last udapte: 21/05/2011
+
+deriv_loglike = deriv_log_likelihood_gppe_fast(f, sigma, all_pairs, ...
+    idx_global_1, idx_global_2, M, N);
+
+deriv_loglike = deriv_loglike';
+
+return;
+
+ 

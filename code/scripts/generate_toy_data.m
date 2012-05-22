@@ -1,0 +1,109 @@
+function [idx_pairs, train_pairs, theta, train_t, x, test_t, test_idx, ftrue_test, ytrue_test] =  ...
+    generate_toy_data(M, N, D_t, D_x, covfunc_t, covfunc_x, sigma)
+% [idx_pairs, train_pairs, theta, train_t, x, test_t, test_idx, ftrue_test, ytrue_test] =  ...
+%     generate_toy_data(M, N, D_t, D_x, covfunc_t, covfunc_x, sigma)
+%
+% Generates data for M users and take one user out as the test user
+%
+% INPUT:
+%   - M:  The total number of users
+%   - N:  The total number of items
+%   - D_t: The dimensionalitty of the users' features 
+%   - D_x: The dimensionality of the items' features 
+%   - covfunc_t: Covariance function on user space
+%   - covfunc_x: Covariance function on item space 
+%   - sigma: The noise parameter (scale factor of the preferences)
+%
+% OUTPUT:
+%   - idx_pairs: The matrix of all pairwise item comparisons:
+%           idx_pairs(i,1) > idx_pairs(i,2)
+%   - train_pairs: Cell array of M elements. Each element is a O_m x 2 matrix 
+%       where O_m is the number of preferences observed for the corresponding
+%       user. Each row all_pairs{m} contains a preference relation 
+%       of the form train_pairs{m}(1) > train_pairs{m}(2)     
+%   - theta = [theta_t; theta_x; theta_sigma]: vector of hyperparameters
+%       theta_t and theta_x are the hyperparameters of the covariences. 
+%       theta_sigma = log (sigma).
+%   - train_t: Matrix of training users' features 
+%   - x: Matrix of items' features 
+%   - test_t: vector of test user's features 
+%   - test_idx: Index of test user 
+%   - ftrue_test: The true value of utility function of test user 
+%   - ytrue_test: Binary vector indicating if the corresponding 
+%       item comparisons hold for the test user
+%
+% Edwin V. Bonilla (edwin.bonilla@nicta.com.au)
+% Last update: 22/05/2012
+
+%% Generating features and latent functions
+EPSILON       = sigma*randn;
+Ntrain_ratio   = 1; % How many training pairs to use
+t = 5*(rand(M,D_t)-0.5);
+x = 15*(rand(N,D_x)-0.5);
+logtheta_x = zeros(D_x+1,1);
+logtheta_t = zeros(D_t+1,1);
+theta = [logtheta_t; logtheta_x; log(sigma)];
+Kt = feval(covfunc_t, logtheta_t, t);
+Kx = feval(covfunc_x, logtheta_x, x);
+
+% K is the kronecker product Kf (x) Kx
+K  = kron(Kt, Kx);
+
+% now genereates the targets Y: gaussian mean 0 cov K
+% we sample this multivariate gaussian distribution N(mu,K)
+n  = N*M;
+mu = zeros(n,1);
+f  = mu + chol(K)'*randn(n,1);
+F  = reshape(f,N,M);
+
+idx_pairs =  combnk(1:N, 2); % all possible pairs
+Y = ( F(idx_pairs(:,1) ,:) - F(idx_pairs(:,2),:) ) > EPSILON;
+    
+% For each user we create a cell that contains the ordered pairs
+all_pairs = cell(1,M);
+for j = 1 : M
+    tmp_pairs = idx_pairs;
+    idx_0 = find(Y(:,j) == 0); % indices in reverse order
+    tmp_pairs(idx_0,:) = fliplr(idx_pairs(idx_0,:));
+    all_pairs{j} = tmp_pairs;
+end
+    
+    
+%% Assigning training and testing data
+Mtrain = M-1;
+test_idx = M;
+Npairs_train = floor(size(idx_pairs,1)*Ntrain_ratio);
+train_pairs = get_training_pairs( all_pairs, Mtrain, Npairs_train);
+test_pairs  = all_pairs{test_idx};
+train_t = t(1:Mtrain,:);
+test_t = t(test_idx,:);
+ftrue_test = F(:,test_idx);
+ytrue_test = Y(:,test_idx); 
+
+    
+    
+%% saving data for C++ code and for elicitation queries on toydata
+DataTr = convert_pairs_to_matrix(train_pairs);
+save('toydata.mat', 'F', 'train_pairs', 'test_pairs', 'ftrue_test', 'train_t', 'x', ...
+    'test_t',  'DataTr', 'K', 'test_idx', 'Kx', ...
+    'Kt', 'theta', 'idx_pairs', 'all_pairs');
+    
+return;
+
+
+
+%% get training pairs
+function train_pairs = get_training_pairs( all_pairs, Mtrain, Ntrain)
+all_pairs = all_pairs(1:Mtrain);
+train_pairs = cell(Mtrain,1);
+for j = 1 : Mtrain
+    pairs = all_pairs{j};
+    idx   = randperm(size(pairs,1));
+    idx   = idx(1:Ntrain);
+    train_pairs{j} = pairs(idx, :);
+end
+
+return;
+
+
+

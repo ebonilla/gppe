@@ -1,0 +1,23 @@
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009) (format=mex 2010.1.19)  27 JAN 2010 16:40
+entering extended mode
+ %&-line parsing enabled.
+**sq_dist
+(/usr/local/texlive/2009/texmf-dist/tex/latex/tools/q.tex
+! Interruption.
+<to be read again> 
+                   \immediate 
+<everyjob> \immediate 
+                      \write 16{This is MeX  Version 1.05  18 XII 1993  (B. ...
+l.1 
+    %%
+? q
+OK, entering \batchmode...
+This is MeX  Version 1.05  18 XII 1993  (B. Jackowski & M. Ry\'cko)
+ File ignored
+)
+! Emergency stop.
+<*> sq_dist
+           
+*** (job aborted, no legal \end found)
+
+No pages of output.

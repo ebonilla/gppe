@@ -1,0 +1,84 @@
+function evoi = expected_voi_gppe(covfunc_t, covfunc_x, theta, f, Kx, Kinv, ...
+    W, L, t, x, train_pairs, idx_global, ind_t, ind_x, test_pair, fbest)
+% evoi = expected_voi_gppe(covfunc_t, covfunc_x, theta, f, Kx, Kinv, ...
+%    W, L, t, x, train_pairs, idx_global, ind_t, ind_x, test_pair, fbest)
+% 
+% Computed the expected value of information of including queries involving
+% the pair test_pair. It  asssumes that:
+%     M is the number of training users + 1
+%     t(M) = tstar
+%     train_pairs{M} exists
+% INPUT:
+%   - covfunc_t
+% covfunc_x 
+% theta 
+% f 
+% Kx 
+% Kinv, ...
+% W 
+% L 
+% t 
+% x 
+% train_pairs 
+% idx_global 
+% ind_t 
+ind_x, test_pair, fbest
+    
+
+% Edwin V. Bonilla (edwin.bonilla@nicta.com.au)
+% Last udapte: 21/05/2011
+
+
+M = size(t,1);
+N = size(x,1);
+tstar = t(M,:);
+
+ 
+% mel before adding test_pair 
+% mei = maximum_expected_improvement_gppe(covfunc_t, covfunc_x, theta, f, Kx, ...
+%     Kinv, W, L, t, x, idx_global, ind_t, ind_x, tstar, 1 : N, fbest);
+mei = 0;
+
+% predictive distribution under current data
+p_12  = predict_gppe_laplace(covfunc_t, covfunc_x, theta, f, Kx, Kinv, ...
+    W, L, t, x, idx_global, ind_t, ind_x, tstar, test_pair);
+p_21  = 1 - p_12;
+
+%% We recompute Laplace approximation and p(f|D U {q_{12})
+% train_pairs
+train_pairs{M} = [train_pairs{M}; test_pair];
+[idx_global_1, idx_global_2] = compute_global_index(train_pairs, N);
+idx_global = unique([idx_global_1; idx_global_2]); 
+[ind_x ind_t] = ind2sub([N M], idx_global); % indices of "seen" data-points and tasks
+
+[f_new Kx_new, Kinv_new, W_new, L_new] = approx_gppe_laplace_fast(covfunc_t, ...
+    covfunc_x, theta, t, x, train_pairs, idx_global, ...
+    idx_global_1, idx_global_2, ind_t, ind_x, M, N);
+
+mei_12 = maximum_expected_improvement_gppe(covfunc_t, covfunc_x, theta, f_new, ...
+    Kx_new, Kinv_new, W_new, L_new, t, x, idx_global, ind_t, ind_x, tstar, 1 : N, fbest);
+
+
+%% We recompute Laplace approximation and p(f|D U {q_{21})
+train_pairs{M}(end,:) = []; % remove previous assignment
+train_pairs{M} = [train_pairs{M}; fliplr(test_pair)];
+[idx_global_1, idx_global_2] = compute_global_index(train_pairs, N);
+idx_global = unique([idx_global_1; idx_global_2]);
+[ind_x ind_t] = ind2sub([N M], idx_global); % indices of "seen" data-points and tasks
+
+[f_new Kx_new, Kinv_new, W_new, L_new] = approx_gppe_laplace_fast(covfunc_t, ...
+    covfunc_x, theta, t, x, train_pairs, idx_global, ...
+    idx_global_1, idx_global_2, ind_t, ind_x, M, N);
+
+mei_21 = maximum_expected_improvement_gppe(covfunc_t, covfunc_x, theta, ...
+    f_new, Kx_new, Kinv_new, W_new, L_new, t, x, idx_global, ind_t, ind_x, tstar, 1 : N, fbest);
+
+
+
+%%  evoi = <MEL(D U q_{ij})> - MEL(D)
+evoi = (p_12*mei_12 + p_21*mei_21) - mei;
+
+
+return;
+
+

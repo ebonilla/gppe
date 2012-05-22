@@ -1,0 +1,24 @@
+function [theta_t, theta_x, theta_sigma] = get_gppe_parameters(covfunc_t, covfunc_x, theta, t, x)
+% [theta_t, theta_x, theta_sigma] = get_gppe_parameters(covfunc_t, covfunc_x, theta, t, x)
+%
+% Returns the subsets of parameters for a GPPE model
+%
+% INPUT:
+covfunc_t, covfunc_x, theta, t, x
+
+% Edwin V. Bonilla (edwin.bonilla@nicta.com.au)
+% Last udapte: 21/05/2011
+
+D = size(t,2);   ntheta_t = eval(feval(covfunc_t{:})); % D_t  = D;% number of cov parameteres
+D = size(x,2);   ntheta_x = eval(feval(covfunc_x{:})); % D_x = D; clear D;
+
+theta_t = theta(1:ntheta_t);
+theta_x = theta(ntheta_t+1:ntheta_t+ntheta_x);
+theta_sigma = theta(end); 
+
+return;
+
+
+
+
+
